@@ -6,30 +6,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace CosmosDBDemo
-{
+namespace CosmosDBDemo;
+
     class Program
     {
-        static async Task Main(string[] args)
-        {
-            var configuration = LoadConfiguration();
-            var cosmosDBSettings = configuration.GetSection("CosmosDBSettings");
+    static async Task Main(string[] args)
+    {
+        var configuration = LoadConfiguration();
+        var cosmosDBSettings = configuration.GetSection("CosmosDBSettings");
 
-            if (args.Length > 0 && args[0] == "q")
+        if (args.Length > 0 && args[0] == "q")
+        {
+            await QueryCosmosDB(cosmosDBSettings);
+        }
+        else if (args.Length > 0 && args[0] == "i")
+        {
+            if (args.Length > 1 && int.TryParse(args[1], out int numberOfCalls))
             {
+                for (int i = 0; i < numberOfCalls; i++)
+                {
+                    await PatchIncrementPropertyInDocument(cosmosDBSettings);
+                }
+                Console.WriteLine($"Patch called {numberOfCalls} times.");
                 await QueryCosmosDB(cosmosDBSettings);
-            }
-            else if (args.Length > 0 && args[0] == "i")
-            {
-                await PatchIncrementPropertyInDocument(cosmosDBSettings);
             }
             else
             {
-                Console.WriteLine("Usage:");
-                Console.WriteLine("To run the query: dotnet run q");
-                Console.WriteLine("To increment 'lifr_dfm': dotnet run increment");
+                Console.WriteLine("Invalid number of calls. Usage: dotnet run increment <number>");
             }
         }
+        else
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("To run the query: dotnet run q");
+            Console.WriteLine("To increment 'lifr_dfm': dotnet run increment <number>");
+        }
+    }
+
 
         static IConfiguration LoadConfiguration()
         {
@@ -88,7 +101,7 @@ namespace CosmosDBDemo
 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    Console.WriteLine("'lifr_dfm' incremented successfully.");
+                  //  Console.WriteLine("'lifr_dfm' incremented successfully.");
                 }
                 else
                 {
@@ -97,4 +110,3 @@ namespace CosmosDBDemo
             }
         }
     }
-}
