@@ -28,7 +28,7 @@ namespace CosmosDBDemo;
                     await PatchIncrementPropertyInDocument(cosmosDBSettings);
                 }
                 Console.WriteLine($"Patch called {numberOfCalls} times.");
-                await QueryCosmosDB(cosmosDBSettings);
+               // await QueryCosmosDB(cosmosDBSettings);
             }
             else
             {
@@ -91,7 +91,8 @@ namespace CosmosDBDemo;
                 // Define the patch operation
                 var patchOperations = new List<PatchOperation>
                 {
-                    PatchOperation.Increment("/trackingSummary/lifr_dfm", 1)
+                   // PatchOperation.Increment("/trackingSummary/lifr_dfm", 1)
+                    PatchOperation.Increment("/dispatch/success", 1)
                 };
 
                 // Execute the patch operation with the correct partition key path
