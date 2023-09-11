@@ -29,6 +29,28 @@ namespace CosmosDBDemo;
                 }
                 Console.WriteLine($"Patch called {numberOfCalls} times.");
                // await QueryCosmosDB(cosmosDBSettings);
+                 await DisplayAttributes(cosmosDBSettings);
+
+                 // Retrieve the document
+                var documentId = DocumentConstants.DocumentId;
+                var (areAttributesEqual, comparisonResult) = CompareAttributes(cosmosDBSettings, documentId);
+
+                if (areAttributesEqual)
+                {
+                    Console.WriteLine("Attributes match: " + comparisonResult);
+                }
+                else
+                {
+                    if (comparisonResult.Contains("not found"))
+                    {
+                        Console.WriteLine("Error: Document not found.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Attributes DO NOT match: " + comparisonResult);
+                    }
+                }                
+
             }
             else
             {
@@ -110,4 +132,66 @@ namespace CosmosDBDemo;
                 }
             }
         }
+
+        // Add this new method to display attributes
+        static async Task DisplayAttributes(IConfigurationSection cosmosDBSettings)
+        {
+            var connectionString = cosmosDBSettings["ConnectionString"];
+            var databaseId = cosmosDBSettings["DatabaseId"];
+            var containerId = cosmosDBSettings["ContainerId"];
+
+            using (var client = new CosmosClient(connectionString))
+            {
+                var database = client.GetDatabase(databaseId);
+                var container = database.GetContainer(containerId);
+
+                var response = await container.ReadItemAsync<JObject>(DocumentConstants.DocumentId, new PartitionKey(DocumentConstants.DocumentId));
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var document = response.Resource;
+                    var documentFlushItemCount = document["documentFlushItemCount"];
+                    var dispatchSuccess = document["dispatch"]["success"];
+
+                    Console.WriteLine($"documentFlushItemCount: {documentFlushItemCount}");
+                    Console.WriteLine($"dispatch/success: {dispatchSuccess}");
+                }
+                else
+                {
+                    Console.WriteLine($"Document not found with ID: {DocumentConstants.DocumentId}");
+                }
+            }
+        }
+
+        static (bool, string) CompareAttributes(IConfigurationSection cosmosDBSettings, string documentId)
+        {
+            var connectionString = cosmosDBSettings["ConnectionString"];
+            var databaseId = cosmosDBSettings["DatabaseId"];
+            var containerId = cosmosDBSettings["ContainerId"];
+
+            using (var client = new CosmosClient(connectionString))
+            {
+                var database = client.GetDatabase(databaseId);
+                var container = database.GetContainer(containerId);
+
+                var response = container.ReadItemAsync<JObject>(documentId, new PartitionKey(documentId)).Result;
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var document = response.Resource;
+                    var documentFlushItemCount = document["documentFlushItemCount"]?.Value<int>() ?? 0;
+                    var dispatchSuccess = document["dispatch"]["success"]?.Value<int>() ?? 0;
+
+                    bool areAttributesEqual = documentFlushItemCount == dispatchSuccess;
+                    
+                    return (areAttributesEqual, "Attributes compared successfully.");
+                }
+                else
+                {
+                    return (false, $"Error: Document not found with ID: {documentId}");
+                }
+            }
+        }
+
     }
+    
