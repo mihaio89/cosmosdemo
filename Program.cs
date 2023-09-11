@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,8 @@ namespace CosmosDBDemo;
 
                 if (areAttributesEqual)
                 {
-                    Console.WriteLine("Attributes match: " + comparisonResult);
+                    Console.WriteLine("documentFlushItemCount matches success dispatch, DONE to be created: " + comparisonResult);
+                    Console.WriteLine(GenerateDone(documentId));
                 }
                 else
                 {
@@ -47,7 +49,7 @@ namespace CosmosDBDemo;
                     }
                     else
                     {
-                        Console.WriteLine("Attributes DO NOT match: " + comparisonResult);
+                        Console.WriteLine("documentFlushItemCount DOES NOT match success dispatch: " + comparisonResult);
                     }
                 }                
 
@@ -192,6 +194,16 @@ namespace CosmosDBDemo;
                 }
             }
         }
+
+        static string GenerateDone(string documentId)
+        {
+            var json = new JObject(
+   
+            );
+
+            return json.ToString(Formatting.Indented);
+        }
+
 
     }
     
